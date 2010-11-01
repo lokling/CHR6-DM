@@ -110,7 +110,7 @@ public class CHR6DM {
 
 
     public final Data data = new Data();
-    
+
     public class Data{
         @Override
         public String toString() {
@@ -262,14 +262,15 @@ public class CHR6DM {
 
     public boolean requestAndReadPacket() {
         sendPacket(GET_DATA);
-        return waitForData(1000);
+        return waitFor(SENSOR_DATA, 1000);
     }
 
-    private boolean waitForData(int timeout) {
+
+    private boolean waitFor(int command,int timeout) {
         long startTime = System.currentTimeMillis();
         while(System.currentTimeMillis()-startTime<timeout){
             int[] packet = readPacket();
-            if (packet[0]==SENSOR_DATA){
+            if (packet[0]==command){
                 return decodePacket(packet);
             }
         }
@@ -279,52 +280,61 @@ public class CHR6DM {
 
     private boolean decodePacket(int[] packet) {
         int index = 0;
-        if (packet[index++]==SENSOR_DATA){
+        switch (packet[index++]) {
+            case SENSOR_DATA:
 
-            int flags = bytesToInteger(packet[index++],packet[index++]);
+                int flags = bytesToInteger(packet[index++],packet[index++]);
 
-            data.yawEnabled          = (flags & CHANNEL_YAW_MASK            ) == CHANNEL_YAW_MASK;
-            data.pitchEnabled        = (flags & CHANNEL_PITCH_MASK          ) == CHANNEL_PITCH_MASK;
-            data.rollEnabled         = (flags & CHANNEL_ROLL_MASK           ) == CHANNEL_ROLL_MASK;
-            data.yawRateEnabled      = (flags & CHANNEL_YAW_RATE_MASK       ) == CHANNEL_YAW_RATE_MASK;
-            data.pitchRateEnabled    = (flags & CHANNEL_PITCH_RATE_MASK     ) == CHANNEL_PITCH_RATE_MASK;
-            data.rollRateEnabled     = (flags & CHANNEL_ROLL_RATE_MASK      ) == CHANNEL_ROLL_RATE_MASK;
-            data.mxEnabled           = (flags & CHANNEL_MX_MASK             ) == CHANNEL_MX_MASK;
-            data.myEnabled           = (flags & CHANNEL_MY_MASK             ) == CHANNEL_MY_MASK;
-            data.mzEnabled           = (flags & CHANNEL_MZ_MASK             ) == CHANNEL_MZ_MASK;
-            data.gxEnabled           = (flags & CHANNEL_GX_MASK             ) == CHANNEL_GX_MASK;
-            data.gyEnabled           = (flags & CHANNEL_GY_MASK             ) == CHANNEL_GY_MASK;
-            data.gzEnabled           = (flags & CHANNEL_GZ_MASK             ) == CHANNEL_GZ_MASK;
-            data.axEnabled           = (flags & CHANNEL_AX_MASK             ) == CHANNEL_AX_MASK;
-            data.ayEnabled           = (flags & CHANNEL_AY_MASK             ) == CHANNEL_AY_MASK;
-            data.azEnabled           = (flags & CHANNEL_AZ_MASK             ) == CHANNEL_AZ_MASK;
+                data.yawEnabled          = (flags & CHANNEL_YAW_MASK            ) == CHANNEL_YAW_MASK;
+                data.pitchEnabled        = (flags & CHANNEL_PITCH_MASK          ) == CHANNEL_PITCH_MASK;
+                data.rollEnabled         = (flags & CHANNEL_ROLL_MASK           ) == CHANNEL_ROLL_MASK;
+                data.yawRateEnabled      = (flags & CHANNEL_YAW_RATE_MASK       ) == CHANNEL_YAW_RATE_MASK;
+                data.pitchRateEnabled    = (flags & CHANNEL_PITCH_RATE_MASK     ) == CHANNEL_PITCH_RATE_MASK;
+                data.rollRateEnabled     = (flags & CHANNEL_ROLL_RATE_MASK      ) == CHANNEL_ROLL_RATE_MASK;
+                data.mxEnabled           = (flags & CHANNEL_MX_MASK             ) == CHANNEL_MX_MASK;
+                data.myEnabled           = (flags & CHANNEL_MY_MASK             ) == CHANNEL_MY_MASK;
+                data.mzEnabled           = (flags & CHANNEL_MZ_MASK             ) == CHANNEL_MZ_MASK;
+                data.gxEnabled           = (flags & CHANNEL_GX_MASK             ) == CHANNEL_GX_MASK;
+                data.gyEnabled           = (flags & CHANNEL_GY_MASK             ) == CHANNEL_GY_MASK;
+                data.gzEnabled           = (flags & CHANNEL_GZ_MASK             ) == CHANNEL_GZ_MASK;
+                data.axEnabled           = (flags & CHANNEL_AX_MASK             ) == CHANNEL_AX_MASK;
+                data.ayEnabled           = (flags & CHANNEL_AY_MASK             ) == CHANNEL_AY_MASK;
+                data.azEnabled           = (flags & CHANNEL_AZ_MASK             ) == CHANNEL_AZ_MASK;
 
 
-            if (data.yawEnabled          ){ data.yaw          = bytesToInteger(packet[index++],packet[index++]); }
-            if (data.pitchEnabled        ){ data.pitch        = bytesToInteger(packet[index++],packet[index++]); }
-            if (data.rollEnabled         ){ data.roll         = bytesToInteger(packet[index++],packet[index++]); }
-            if (data.yawRateEnabled      ){ data.yawRate      = bytesToInteger(packet[index++],packet[index++]); }
-            if (data.pitchRateEnabled    ){ data.pitchRate    = bytesToInteger(packet[index++],packet[index++]); }
-            if (data.rollRateEnabled     ){ data.rollRate     = bytesToInteger(packet[index++],packet[index++]); }
-            if (data.mxEnabled           ){ data.mx           = bytesToInteger(packet[index++],packet[index++]); }
-            if (data.myEnabled           ){ data.my           = bytesToInteger(packet[index++],packet[index++]); }
-            if (data.mzEnabled           ){ data.mz           = bytesToInteger(packet[index++],packet[index++]); }
-            if (data.gxEnabled           ){ data.gx           = bytesToInteger(packet[index++],packet[index++]); }
-            if (data.gyEnabled           ){ data.gy           = bytesToInteger(packet[index++],packet[index++]); }
-            if (data.gzEnabled           ){ data.gz           = bytesToInteger(packet[index++],packet[index++]); }
-            if (data.axEnabled           ){ data.ax           = bytesToInteger(packet[index++],packet[index++]); }
-            if (data.ayEnabled           ){ data.ay           = bytesToInteger(packet[index++],packet[index++]); }
-            if (data.azEnabled           ){ data.az           = bytesToInteger(packet[index++],packet[index++]); }
+                if (data.yawEnabled          ){ data.yaw          = bytesToInteger(packet[index++],packet[index++]); }
+                if (data.pitchEnabled        ){ data.pitch        = bytesToInteger(packet[index++],packet[index++]); }
+                if (data.rollEnabled         ){ data.roll         = bytesToInteger(packet[index++],packet[index++]); }
+                if (data.yawRateEnabled      ){ data.yawRate      = bytesToInteger(packet[index++],packet[index++]); }
+                if (data.pitchRateEnabled    ){ data.pitchRate    = bytesToInteger(packet[index++],packet[index++]); }
+                if (data.rollRateEnabled     ){ data.rollRate     = bytesToInteger(packet[index++],packet[index++]); }
+                if (data.mxEnabled           ){ data.mx           = bytesToInteger(packet[index++],packet[index++]); }
+                if (data.myEnabled           ){ data.my           = bytesToInteger(packet[index++],packet[index++]); }
+                if (data.mzEnabled           ){ data.mz           = bytesToInteger(packet[index++],packet[index++]); }
+                if (data.gxEnabled           ){ data.gx           = bytesToInteger(packet[index++],packet[index++]); }
+                if (data.gyEnabled           ){ data.gy           = bytesToInteger(packet[index++],packet[index++]); }
+                if (data.gzEnabled           ){ data.gz           = bytesToInteger(packet[index++],packet[index++]); }
+                if (data.axEnabled           ){ data.ax           = bytesToInteger(packet[index++],packet[index++]); }
+                if (data.ayEnabled           ){ data.ay           = bytesToInteger(packet[index++],packet[index++]); }
+                if (data.azEnabled           ){ data.az           = bytesToInteger(packet[index++],packet[index++]); }
 
-            if (index!=packet.length){
-                throw new RuntimeException("Error! Packet length and flag mismatch!");
-            }
+                if (index!=packet.length){
+                    throw new RuntimeException("Error! Packet length and flag mismatch!");
+                }
 
-            return true;
+                return true;
+            case STATUS_REPORT:
+                return true;
+            default:
+                return false;
 
-        } else {
-            return false;
         }
+    }
+
+
+    public boolean selfTest(){
+        sendPacket(SELF_TEST);
+        return waitFor(STATUS_REPORT,1000);
     }
 
     private int bytesToInteger(int high, int low) {

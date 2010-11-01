@@ -26,6 +26,7 @@ public class SensorReader {
 
           CHR6DM chr6DM = new CHR6DM(serialPort.getInputStream(),serialPort.getOutputStream());
 
+          chr6DM.selfTest();
           //readBroadcastPackets(chr6DM);
           silentModeReads(chr6DM);
 
@@ -50,14 +51,30 @@ public class SensorReader {
         chr6DM.setListenMode();
         chr6DM.setActiveChannels(CHR6DM.CHANNEL_YAW_MASK );
 
+        int received = 0;
+        long lastCheck = System.currentTimeMillis();
         while(true){
-           if (chr6DM.requestAndReadPacket()){
-               System.out.println(chr6DM.data);
-           } else {
-               System.out.println("Error in read!");
-           }
+            if (chr6DM.requestAndReadPacket()){
+                //System.out.println(chr6DM.data);
+                received++;
+            } else {
+                System.out.println("Error in read!");
+            }
+            final long currentTime = System.currentTimeMillis();
+            final long timepassed = currentTime - lastCheck;
+            if (timepassed > 1000){
+                System.out.println(chr6DM.data);
+                System.out.println(String.format("Reveived %s packets %shz",received,((float)received*1000)/(float)timepassed));
+
+                lastCheck = currentTime;
+                received=0;
+
+            }
         }
     }
+
+
+    
 
     private static void readBroadcastPackets(CHR6DM chr6DM) {
 
