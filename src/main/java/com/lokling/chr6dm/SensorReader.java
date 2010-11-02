@@ -26,7 +26,13 @@ public class SensorReader {
 
           CHR6DM chr6DM = new CHR6DM(serialPort.getInputStream(),serialPort.getOutputStream());
 
-          chr6DM.selfTest();
+          //chr6DM.selfTest();
+          //chr6DM.resetToFactory();
+          chr6DM.EKFReset();
+          //chr6DM.writeToFlash();
+
+
+
           //readBroadcastPackets(chr6DM);
           silentModeReads(chr6DM);
 
@@ -47,7 +53,7 @@ public class SensorReader {
     }
 
     private static void silentModeReads(CHR6DM chr6DM) throws IOException {
-        chr6DM.resetToFactory();
+        //chr6DM.resetToFactory();
         chr6DM.setListenMode();
         chr6DM.setActiveChannels(CHR6DM.CHANNEL_YAW_MASK );
 

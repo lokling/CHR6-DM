@@ -105,32 +105,55 @@ public class CHR6DM {
     public static final int CHANNEL_ALL_MASK           = 65535;
 
 
+    // Scale factors
+    public static double SCALE_YAW        = 0.0109863; // °/LSB
+    public static double SCALE_PITCH      = 0.0109863;
+    public static double SCALE_ROLL       = 0.0109863;
+    public static double SCALE_YAW_RATE   = 0.0137329; // °/s/LSB
+    public static double SCALE_PITCH_RATE = 0.0137329;
+    public static double SCALE_ROLL_RATE  = 0.0137329;
+    public static double SCALE_MAG_X      = 0.0610350; // mGauss/LSB
+    public static double SCALE_MAG_Y      = 0.0610350;
+    public static double SCALE_MAG_Z      = 0.0610350;
+    public static double SCALE_GYRO_X     = 0.0181200; // °/s/LSB
+    public static double SCALE_GYRO_Y     = 0.0181200;
+    public static double SCALE_GYRO_Z     = 0.0181200;
+    public static double SCALE_ACCEL_X    = 0.1068120; // mg/LSB
+    public static double SCALE_ACCEL_Y    = 0.1068120;
+    public static double SCALE_ACCEL_Z    = 0.1068120;
+
     private final InputStream in;
     private final OutputStream out;
 
 
     public final Data data = new Data();
 
+  public void EKFReset() {
+    sendPacket(EKF_RESET);
+    waitForAck(1000);
+  }
+
+    public void writeToFlash() {
+        sendPacket(WRITE_TO_FLASH);
+        waitForAck(5000);
+    }
+
     public class Data{
         @Override
         public String toString() {
-            return "Data{" +
-                    "yaw=" + yaw +
-                    ", pitch=" + pitch +
-                    ", roll=" + roll +
-                    ", yawRate=" + yawRate +
-                    ", pitchRate=" + pitchRate +
-                    ", rollRate=" + rollRate +
-                    ", mx=" + mx +
-                    ", my=" + my +
-                    ", mz=" + mz +
-                    ", gx=" + gx +
-                    ", gy=" + gy +
-                    ", gz=" + gz +
-                    ", ax=" + ax +
-                    ", ay=" + ay +
-                    ", az=" + az +
-                    '}';
+            return String.format("Data{ " +
+                    "yaw=%.2f , pitch=%.2f, roll=%.2f, " +
+                    "yawRate=%.2f, pitchRate=%.2f, rollRate=%.2f, " +
+                    "mx=%.2f, my=%.2f, mz=%.2f, " +
+                    "gx=%.2f, gy=%.2f, gz=%.2f, " +
+                    "ax=%.2f, ay=%.2f, az=%.2f" +
+                    "}",
+                    yaw,pitch,roll,
+                    yawRate,pitchRate,rollRate,
+                    mx,my,mz,
+                    gx,gy,gz,
+                    az,ay,az
+            );
         }
 
         public boolean yawEnabled;
@@ -149,21 +172,21 @@ public class CHR6DM {
         public boolean ayEnabled;
         public boolean azEnabled;
 
-        public int yaw;
-        public int pitch;
-        public int roll;
-        public int yawRate;
-        public int pitchRate;
-        public int rollRate;
-        public int mx;
-        public int my;
-        public int mz;
-        public int gx;
-        public int gy;
-        public int gz;
-        public int ax;
-        public int ay;
-        public int az;
+        public double yaw;
+        public double pitch;
+        public double roll;
+        public double yawRate;
+        public double pitchRate;
+        public double rollRate;
+        public double mx;
+        public double my;
+        public double mz;
+        public double gx;
+        public double gy;
+        public double gz;
+        public double ax;
+        public double ay;
+        public double az;
     }
 
 
@@ -199,7 +222,7 @@ public class CHR6DM {
             int high =  in.read();
             int low =   in.read();
 
-            int packetChecksum = bytesToInteger(high,low);
+            int packetChecksum = bytesToSignedShort(high,low);
 
             if (calculatedChecksum!=packetChecksum) {
                 return FAILED_CHECKSUM_PACKET;
@@ -230,7 +253,7 @@ public class CHR6DM {
 
 
     public void setBroadCastMode(int x) {
-        sendPacket(SET_BROADCAST_MODE);
+        sendPacket(SET_BROADCAST_MODE,new int[]{x});
     }
 
     private void sendPacket(int command)  {
@@ -283,7 +306,7 @@ public class CHR6DM {
         switch (packet[index++]) {
             case SENSOR_DATA:
 
-                int flags = bytesToInteger(packet[index++],packet[index++]);
+                int flags = bytesToSignedShort(packet[index++],packet[index++]);
 
                 data.yawEnabled          = (flags & CHANNEL_YAW_MASK            ) == CHANNEL_YAW_MASK;
                 data.pitchEnabled        = (flags & CHANNEL_PITCH_MASK          ) == CHANNEL_PITCH_MASK;
@@ -302,21 +325,21 @@ public class CHR6DM {
                 data.azEnabled           = (flags & CHANNEL_AZ_MASK             ) == CHANNEL_AZ_MASK;
 
 
-                if (data.yawEnabled          ){ data.yaw          = bytesToInteger(packet[index++],packet[index++]); }
-                if (data.pitchEnabled        ){ data.pitch        = bytesToInteger(packet[index++],packet[index++]); }
-                if (data.rollEnabled         ){ data.roll         = bytesToInteger(packet[index++],packet[index++]); }
-                if (data.yawRateEnabled      ){ data.yawRate      = bytesToInteger(packet[index++],packet[index++]); }
-                if (data.pitchRateEnabled    ){ data.pitchRate    = bytesToInteger(packet[index++],packet[index++]); }
-                if (data.rollRateEnabled     ){ data.rollRate     = bytesToInteger(packet[index++],packet[index++]); }
-                if (data.mxEnabled           ){ data.mx           = bytesToInteger(packet[index++],packet[index++]); }
-                if (data.myEnabled           ){ data.my           = bytesToInteger(packet[index++],packet[index++]); }
-                if (data.mzEnabled           ){ data.mz           = bytesToInteger(packet[index++],packet[index++]); }
-                if (data.gxEnabled           ){ data.gx           = bytesToInteger(packet[index++],packet[index++]); }
-                if (data.gyEnabled           ){ data.gy           = bytesToInteger(packet[index++],packet[index++]); }
-                if (data.gzEnabled           ){ data.gz           = bytesToInteger(packet[index++],packet[index++]); }
-                if (data.axEnabled           ){ data.ax           = bytesToInteger(packet[index++],packet[index++]); }
-                if (data.ayEnabled           ){ data.ay           = bytesToInteger(packet[index++],packet[index++]); }
-                if (data.azEnabled           ){ data.az           = bytesToInteger(packet[index++],packet[index++]); }
+                if (data.yawEnabled          ){ data.yaw          = SCALE_YAW           * bytesToSignedShort(packet[index++],packet[index++]); }
+                if (data.pitchEnabled        ){ data.pitch        = SCALE_PITCH         * bytesToSignedShort(packet[index++],packet[index++]); }
+                if (data.rollEnabled         ){ data.roll         = SCALE_ROLL          * bytesToSignedShort(packet[index++],packet[index++]); }
+                if (data.yawRateEnabled      ){ data.yawRate      = SCALE_YAW_RATE      * bytesToSignedShort(packet[index++],packet[index++]); }
+                if (data.pitchRateEnabled    ){ data.pitchRate    = SCALE_PITCH_RATE    * bytesToSignedShort(packet[index++],packet[index++]); }
+                if (data.rollRateEnabled     ){ data.rollRate     = SCALE_ROLL_RATE     * bytesToSignedShort(packet[index++],packet[index++]); }
+                if (data.mxEnabled           ){ data.mx           = SCALE_MAG_X         * bytesToSignedShort(packet[index++],packet[index++]); }
+                if (data.myEnabled           ){ data.my           = SCALE_MAG_Y         * bytesToSignedShort(packet[index++],packet[index++]); }
+                if (data.mzEnabled           ){ data.mz           = SCALE_MAG_Z         * bytesToSignedShort(packet[index++],packet[index++]); }
+                if (data.gxEnabled           ){ data.gx           = SCALE_GYRO_X        * bytesToSignedShort(packet[index++],packet[index++]); }
+                if (data.gyEnabled           ){ data.gy           = SCALE_GYRO_Y        * bytesToSignedShort(packet[index++],packet[index++]); }
+                if (data.gzEnabled           ){ data.gz           = SCALE_GYRO_Z        * bytesToSignedShort(packet[index++],packet[index++]); }
+                if (data.axEnabled           ){ data.ax           = SCALE_ACCEL_X       * bytesToSignedShort(packet[index++],packet[index++]); }
+                if (data.ayEnabled           ){ data.ay           = SCALE_ACCEL_Y       * bytesToSignedShort(packet[index++],packet[index++]); }
+                if (data.azEnabled           ){ data.az           = SCALE_ACCEL_Z       * bytesToSignedShort(packet[index++],packet[index++]); }
 
                 if (index!=packet.length){
                     throw new RuntimeException("Error! Packet length and flag mismatch!");
@@ -337,8 +360,8 @@ public class CHR6DM {
         return waitFor(STATUS_REPORT,1000);
     }
 
-    private int bytesToInteger(int high, int low) {
-        return ((high & 0xFF) << 8) | (low & 0xFF);
+    private int bytesToSignedShort(int high, int low) {
+        return (short)((high & 0xFF) << 8) | (low & 0xFF);
     }
 
     public void setListenMode() throws IOException {
